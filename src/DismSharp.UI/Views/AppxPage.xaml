@@ -4,7 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="Appx 管理"
-    Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ScrollViewer.CanContentScroll="False">
     <Grid Margin="24">
         <StackPanel VerticalAlignment="Top">
             <TextBlock Text="Appx 管理" FontSize="28" FontWeight="SemiBold" />
