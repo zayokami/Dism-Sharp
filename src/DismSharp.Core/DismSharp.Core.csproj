@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageLicenseFile>LICENSE-MPL-2.0</PackageLicenseFile>
+    <Copyright>Copyright (c) 2026 zayoka</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,8 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PackageLicenseFile>LICENSE-MIT</PackageLicenseFile>
+    <Copyright>Copyright (c) 2026 zayoka</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
