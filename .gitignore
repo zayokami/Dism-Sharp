@@ -1,0 +1,39 @@
+## .NET
+bin/
+obj/
+publish/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## VS / VS Code
+.vs/
+.vscode/
+*.rsuser
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+
+## NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+**/packages/repositories.config
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+
+## Misc
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+## Claude
+CLAUDE.md
+AGENT.md

@@ -1,0 +1,22 @@
+<Application
+    x:Class="DismSharp.UI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:converters="clr-namespace:DismSharp.UI.Converters"
+    StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:FeatureStateToStringConverter x:Key="FeatureStateToString" />
+            <converters:FeatureStateToBrushConverter x:Key="FeatureStateToBrush" />
+            <converters:DriverSignatureToStringConverter x:Key="DriverSignatureToString" />
+            <converters:ReleaseTypeToStringConverter x:Key="ReleaseTypeToString" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <converters:InverseBoolConverter x:Key="InverseBool" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
