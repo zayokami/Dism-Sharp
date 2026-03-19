@@ -25,6 +25,12 @@ public static class CleanupEngine
         new PrefetchRule(),
         new RecycleBinRule(),
         new ThumbnailCacheRule(),
+        new WindowsOldRule(),
+        new HibernateFileRule(),
+        new DeliveryOptimizationRule(),
+        new CrashDumpsRule(),
+        new ErrorReportsRule(),
+        new DirectXShaderCacheRule(),
     ];
 
     /// <summary>扫描所有规则，返回各规则的可清理项</summary>
