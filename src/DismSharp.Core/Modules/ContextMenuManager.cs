@@ -46,12 +46,20 @@ public static class ContextMenuManager
         {
             var items = new List<ContextMenuItem>();
 
-            // 扫描标准路径
+            // 扫描 HKEY_CLASSES_ROOT（合并视图）
             foreach (var (path, fileType) in ScanPaths)
             {
-                ScanShellKey(Registry.CurrentUser, path, fileType, items);
-                ScanShellKey(Registry.LocalMachine, path, fileType, items);
+                ScanShellKey(Registry.ClassesRoot, path, fileType, items);
             }
+
+            // 扫描 HKCU 自定义菜单（Software\Classes 下用户覆盖）
+            foreach (var (path, fileType) in ScanPaths)
+            {
+                ScanShellKey(Registry.CurrentUser, @"Software\Classes\" + path, fileType, items);
+            }
+
+            // 扫描用户自定义菜单（文件扩展关联覆盖）
+            ScanShellKey(Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts", "文件扩展关联", items);
 
             // 扫描常见扩展名
             foreach (var ext in CommonExtensions)
