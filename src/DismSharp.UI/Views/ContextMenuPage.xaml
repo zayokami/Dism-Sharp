@@ -1,10 +1,10 @@
 <Page
-    x:Class="DismSharp.UI.Views.BootPage"
+    x:Class="DismSharp.UI.Views.ContextMenuPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:controls="clr-namespace:DismSharp.UI.Controls"
-    Title="启动项管理"
+    Title="右键菜单管理"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     ScrollViewer.CanContentScroll="False">
 
@@ -18,13 +18,13 @@
             HorizontalScrollBarVisibility="Disabled"
             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
             <StackPanel>
-                <TextBlock Text="启动项管理" FontSize="28" FontWeight="SemiBold" />
+                <TextBlock Text="右键菜单管理" FontSize="28" FontWeight="SemiBold" />
                 <TextBlock FontSize="14" Margin="0,4,0,0" Opacity="0.6">
-                    <Run Text="共 " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" 个启动项" />
+                    <Run Text="共 " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" 个菜单项" />
                 </TextBlock>
 
                 <ui:TextBox
-                    PlaceholderText="搜索启动项..."
+                    PlaceholderText="搜索菜单项..."
                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                     Margin="0,12,0,0"
                     Icon="{ui:SymbolIcon Search24}" />
@@ -47,20 +47,18 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="14" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="14" />
+                                            <TextBlock Text="{Binding FileType}" Opacity="0.5" FontSize="11" Margin="8,2,0,0" />
+                                        </StackPanel>
                                         <TextBlock Text="{Binding Command}" Opacity="0.6" FontSize="11" Margin="0,2,0,0"
                                                    TextTrimming="CharacterEllipsis" MaxWidth="600" />
-                                        <TextBlock Text="{Binding Location}" Opacity="0.4" FontSize="10" Margin="0,2,0,0" />
+                                        <TextBlock Text="{Binding KeyPath}" Opacity="0.4" FontSize="10" Margin="0,2,0,0" />
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                                         <ui:Button Content="禁用" Appearance="Danger" FontSize="12" Padding="10,4"
-                                                   Visibility="{Binding Enabled, Converter={StaticResource BoolToVisibility}}"
                                                    Command="{Binding DataContext.DisableItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                   CommandParameter="{Binding}" />
-                                        <ui:Button Content="启用" Appearance="Primary" FontSize="12" Padding="10,4"
-                                                   Visibility="{Binding Enabled, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                   Command="{Binding DataContext.EnableItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                    CommandParameter="{Binding}" />
                                         <ui:Button Content="删除" Appearance="Secondary" FontSize="12" Padding="10,4" Margin="4,0,0,0"
                                                    Command="{Binding DataContext.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"

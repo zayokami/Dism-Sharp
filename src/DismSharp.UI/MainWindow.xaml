@@ -32,7 +32,8 @@
                 <ui:NavigationViewItem Content="更新包管理" Icon="{ui:SymbolIcon ArrowDownload24}" TargetPageType="{x:Type views:PackagesPage}" />
                 <ui:NavigationViewItem Content="驱动管理" Icon="{ui:SymbolIcon DeviceMeetingRoom24}" TargetPageType="{x:Type views:DriversPage}" />
                 <ui:NavigationViewItem Content="Appx 管理" Icon="{ui:SymbolIcon Apps24}" TargetPageType="{x:Type views:AppxPage}" />
-                <ui:NavigationViewItem Content="引导修复" Icon="{ui:SymbolIcon Power24}" TargetPageType="{x:Type views:BootPage}" />
+                <ui:NavigationViewItem Content="启动项" Icon="{ui:SymbolIcon Power24}" TargetPageType="{x:Type views:BootPage}" />
+                <ui:NavigationViewItem Content="右键菜单" Icon="{ui:SymbolIcon CursorHover24}" TargetPageType="{x:Type views:ContextMenuPage}" />
                 <ui:NavigationViewItem Content="映像管理" Icon="{ui:SymbolIcon Image24}" TargetPageType="{x:Type views:ImagePage}" />
             </ui:NavigationView.MenuItems>
 
