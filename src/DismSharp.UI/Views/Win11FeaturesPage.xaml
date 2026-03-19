@@ -117,7 +117,6 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="WSA Android 子系统" FontSize="18" FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding IsWsaInstalled, StringFormat='{}({0})'}" Opacity="0.6" Margin="8,4,0,0" />
                         </StackPanel>
                         <ItemsControl ItemsSource="{Binding WsaApps}">
                             <ItemsControl.ItemTemplate>
