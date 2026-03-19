@@ -33,7 +33,7 @@ public partial class CleanupRuleItem : ObservableObject
 }
 
 /// <summary>系统清理页面 ViewModel</summary>
-public partial class CleanupViewModel : ObservableObject
+public partial class CleanupViewModel : ViewModelBase
 {
     [ObservableProperty]
     private ObservableCollection<CleanupRuleItem> _ruleItems = [];
@@ -49,12 +49,6 @@ public partial class CleanupViewModel : ObservableObject
 
     [ObservableProperty]
     private string _scanStatus = "";
-
-    [ObservableProperty]
-    private string? _statusMessage;
-
-    [ObservableProperty]
-    private bool _isStatusError;
 
     [ObservableProperty]
     private int _operationProgress;

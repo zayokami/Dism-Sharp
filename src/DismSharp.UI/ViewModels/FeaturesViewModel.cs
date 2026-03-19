@@ -21,7 +21,7 @@ public partial class FeatureDisplayItem : ObservableObject
 }
 
 /// <summary>Windows 功能管理页面 ViewModel</summary>
-public partial class FeaturesViewModel : ObservableObject
+public partial class FeaturesViewModel : ViewModelBase
 {
     private List<FeatureDisplayItem> _allFeatures = [];
 
@@ -35,24 +35,6 @@ public partial class FeaturesViewModel : ObservableObject
     private FeatureDisplayItem? _selectedFeature;
 
     [ObservableProperty]
-    private bool _isLoading = true;
-
-    [ObservableProperty]
-    private string _loadingStatus = "正在查询 DISM 功能列表...";
-
-    [ObservableProperty]
-    private bool _isOperating;
-
-    [ObservableProperty]
-    private int _operationProgress;
-
-    [ObservableProperty]
-    private string? _statusMessage;
-
-    [ObservableProperty]
-    private bool _isStatusError;
-
-    [ObservableProperty]
     private int _totalCount;
 
     [ObservableProperty]
@@ -62,11 +44,7 @@ public partial class FeaturesViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadFeaturesAsync()
     {
-        IsLoading = true;
-        LoadingStatus = "正在查询 DISM 功能列表...";
-        StatusMessage = null;
-
-        try
+        await ExecuteLoadAsync(async () =>
         {
             var features = await Task.Run(() =>
             {
@@ -83,16 +61,7 @@ public partial class FeaturesViewModel : ObservableObject
             TotalCount = _allFeatures.Count;
             EnabledCount = _allFeatures.Count(f => f.IsEnabled);
             ApplyFilter();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"加载失败: {ex.Message}";
-            IsStatusError = true;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        }, "正在查询 DISM 功能列表...");
     }
 
     /// <summary>启用选中的功能</summary>
@@ -101,33 +70,12 @@ public partial class FeaturesViewModel : ObservableObject
     {
         if (feature is null) return;
 
-        IsOperating = true;
-        OperationProgress = 0;
-        StatusMessage = null;
-
-        try
+        var name = feature.FeatureName;
+        await ExecuteOperationAsync(async progress =>
         {
-            var progress = new Progress<int>(p => OperationProgress = p);
-            var name = feature.FeatureName;
-
-            // FeatureManager 内部已有 Task.Run，不再外层包裹
             using var session = DismSharpSession.OpenOnline();
             await FeatureManager.EnableFeatureAsync(session, name, progress: progress);
-
-            StatusMessage = $"已成功启用 {name}，可能需要重新启动才能完成";
-            IsStatusError = false;
-
-            await LoadFeaturesAsync();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"启用 {feature.FeatureName} 失败: {ex.Message}";
-            IsStatusError = true;
-        }
-        finally
-        {
-            IsOperating = false;
-        }
+        }, $"已成功启用 {name}，可能需要重新启动才能完成", LoadFeaturesAsync);
     }
 
     /// <summary>禁用选中的功能</summary>
@@ -136,32 +84,12 @@ public partial class FeaturesViewModel : ObservableObject
     {
         if (feature is null) return;
 
-        IsOperating = true;
-        OperationProgress = 0;
-        StatusMessage = null;
-
-        try
+        var name = feature.FeatureName;
+        await ExecuteOperationAsync(async progress =>
         {
-            var progress = new Progress<int>(p => OperationProgress = p);
-            var name = feature.FeatureName;
-
             using var session = DismSharpSession.OpenOnline();
             await FeatureManager.DisableFeatureAsync(session, name, progress: progress);
-
-            StatusMessage = $"已成功禁用 {name}，可能需要重新启动才能完成";
-            IsStatusError = false;
-
-            await LoadFeaturesAsync();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"禁用 {feature.FeatureName} 失败: {ex.Message}";
-            IsStatusError = true;
-        }
-        finally
-        {
-            IsOperating = false;
-        }
+        }, $"已成功禁用 {name}，可能需要重新启动才能完成", LoadFeaturesAsync);
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();

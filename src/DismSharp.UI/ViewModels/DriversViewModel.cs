@@ -9,7 +9,7 @@ using DismSharp.Core.Native;
 namespace DismSharp.UI.ViewModels;
 
 /// <summary>驱动管理页面 ViewModel</summary>
-public partial class DriversViewModel : ObservableObject
+public partial class DriversViewModel : ViewModelBase
 {
     private List<DriverPackageInfo> _allDrivers = [];
 
@@ -21,24 +21,6 @@ public partial class DriversViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _showAllDrivers;
-
-    [ObservableProperty]
-    private bool _isLoading = true;
-
-    [ObservableProperty]
-    private string _loadingStatus = "正在查询驱动列表...";
-
-    [ObservableProperty]
-    private bool _isOperating;
-
-    [ObservableProperty]
-    private int _operationProgress;
-
-    [ObservableProperty]
-    private string? _statusMessage;
-
-    [ObservableProperty]
-    private bool _isStatusError;
 
     [ObservableProperty]
     private int _totalCount;
@@ -59,10 +41,7 @@ public partial class DriversViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadDriversAsync()
     {
-        IsLoading = true;
-        LoadingStatus = "正在查询驱动列表...";
-
-        try
+        await ExecuteLoadAsync(async () =>
         {
             var showAll = ShowAllDrivers;
             var drivers = await Task.Run(() =>
@@ -78,50 +57,24 @@ public partial class DriversViewModel : ObservableObject
             UnsignedCount = drivers.Count(d => d.DriverSignature == DismDriverSignature.DismDriverSignatureUnsigned);
 
             ApplyFilter();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"加载失败: {ex.Message}";
-            IsStatusError = true;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        }, "正在查询驱动列表...");
     }
 
     /// <summary>备份所有第三方驱动</summary>
     [RelayCommand]
     private async Task BackupDriversAsync()
     {
-        IsOperating = true;
-        OperationProgress = 0;
-        StatusMessage = null;
-
-        try
+        await ExecuteOperationAsync(async progress =>
         {
-            // 备份到用户桌面的 DismSharp_DriverBackup 目录
             var backupDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                 $"DismSharp_DriverBackup_{DateTime.Now:yyyyMMdd_HHmmss}");
 
-            var progress = new Progress<int>(p => OperationProgress = p);
-
             using var session = DismSharpSession.OpenOnline();
             var count = await DriverManager.BackupDriversAsync(session, backupDir, progress);
 
-            StatusMessage = $"已成功备份 {count} 个第三方驱动到 {backupDir}";
-            IsStatusError = false;
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"备份失败: {ex.Message}";
-            IsStatusError = true;
-        }
-        finally
-        {
-            IsOperating = false;
-        }
+            SetSuccess($"已成功备份 {count} 个第三方驱动到 {backupDir}");
+        });
     }
 
     /// <summary>删除第三方驱动</summary>
@@ -130,28 +83,12 @@ public partial class DriversViewModel : ObservableObject
     {
         if (driver is null || driver.InBox) return;
 
-        IsOperating = true;
-        StatusMessage = null;
-
-        try
+        var publishedName = driver.PublishedName;
+        await ExecuteOperationAsync(async _ =>
         {
             using var session = DismSharpSession.OpenOnline();
-            await DriverManager.RemoveDriverAsync(session, driver.PublishedName);
-
-            StatusMessage = $"已成功删除驱动 {driver.PublishedName}";
-            IsStatusError = false;
-
-            await LoadDriversAsync();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"删除驱动失败: {ex.Message}";
-            IsStatusError = true;
-        }
-        finally
-        {
-            IsOperating = false;
-        }
+            await DriverManager.RemoveDriverAsync(session, publishedName);
+        }, $"已成功删除驱动 {publishedName}", LoadDriversAsync);
     }
 
     partial void OnShowAllDriversChanged(bool value) => LoadDriversCommand.Execute(null);

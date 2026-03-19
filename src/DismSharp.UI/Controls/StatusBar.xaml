@@ -1,0 +1,18 @@
+<UserControl x:Class="DismSharp.UI.Controls.StatusBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+
+    <StackPanel>
+        <ui:InfoBar Title="{Binding StatusMessage}"
+                    IsOpen="True"
+                    Severity="{Binding Severity}"
+                    Margin="0,8,0,0"
+                    Visibility="{Binding StatusMessage, TargetNullValue=Collapsed}" />
+
+        <ProgressBar Value="{Binding OperationProgress}"
+                     Maximum="100"
+                     Margin="0,8,0,0"
+                     Visibility="{Binding IsOperating, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+</UserControl>
