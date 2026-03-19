@@ -247,4 +247,61 @@ public sealed class DismSharpSession : IDisposable
             }
         }
     }
+
+    /// <summary>Appx 预配包信息</summary>
+    /// <param name="PackageName">包名称</param>
+    /// <param name="DisplayName">显示名称</param>
+    /// <param name="PublisherId">发布者 ID</param>
+    /// <param name="Version">版本</param>
+    /// <param name="Architecture">处理器架构</param>
+    /// <param name="InstallLocation">安装位置</param>
+    public record AppxPackageInfo(
+        string PackageName,
+        string DisplayName,
+        string PublisherId,
+        string Version,
+        string Architecture,
+        string InstallLocation);
+
+    /// <summary>获取预配置 Appx 包列表</summary>
+    /// <returns>Appx 包信息列表</returns>
+    public List<AppxPackageInfo> GetAppxPackages()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        int hr = DismApi.DismGetProvisionedAppxPackages(_session, out IntPtr packagesPtr, out uint count);
+        DismSharpException.ThrowIfFailed(hr);
+
+        try
+        {
+            var result = new List<AppxPackageInfo>((int)count);
+            int structSize = Marshal.SizeOf<DismAppxPackage>();
+            for (int i = 0; i < count; i++)
+            {
+                var pkg = Marshal.PtrToStructure<DismAppxPackage>(packagesPtr + i * structSize);
+                result.Add(new AppxPackageInfo(
+                    pkg.PackageName != IntPtr.Zero ? Marshal.PtrToStringUni(pkg.PackageName) ?? "" : "",
+                    pkg.DisplayName != IntPtr.Zero ? Marshal.PtrToStringUni(pkg.DisplayName) ?? "" : "",
+                    pkg.PublisherId != IntPtr.Zero ? Marshal.PtrToStringUni(pkg.PublisherId) ?? "" : "",
+                    $"{pkg.MajorVersion}.{pkg.MinorVersion}.{pkg.Build}.{pkg.RevisionNumber}",
+                    pkg.Architecture.ToString(),
+                    pkg.InstallLocation != IntPtr.Zero ? Marshal.PtrToStringUni(pkg.InstallLocation) ?? "" : ""));
+            }
+            return result;
+        }
+        finally
+        {
+            DismApi.DismDelete(packagesPtr);
+        }
+    }
+
+    /// <summary>删除预配置 Appx 包</summary>
+    /// <param name="packageName">包名称</param>
+    public void RemoveAppxPackage(string packageName)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        int hr = DismApi.DismRemoveProvisionedAppxPackage(_session, packageName);
+        DismSharpException.ThrowIfFailed(hr);
+    }
 }
