@@ -1,17 +1,15 @@
+using System.Windows.Controls;
 using DismSharp.UI.ViewModels;
 
 namespace DismSharp.UI.Views;
 
-public partial class AppxPage : System.Windows.Controls.Page
+public partial class AppxPage : Page
 {
-    public AppxPage(AppxViewModel viewModel)
+    public AppxPage()
     {
-        ViewModel = viewModel;
-        DataContext = ViewModel;
         InitializeComponent();
-
-        Loaded += async (_, _) => await ViewModel.LoadPackagesCommand.ExecuteAsync(null);
+        var vm = new AppxViewModel();
+        DataContext = vm;
+        Loaded += async (_, _) => await vm.LoadPackagesCommand.ExecuteAsync(null);
     }
-
-    public AppxViewModel ViewModel { get; }
 }
