@@ -13,15 +13,30 @@ public record ContextMenuItem(
 /// <summary>右键菜单管理器（读写注册表 Shell/ShellEx）</summary>
 public static class ContextMenuManager
 {
-    private static readonly string[] FileTypePaths = [
-        @"*\shell",
-        @"*\shellex\ContextMenuHandlers",
-        @"Directory\shell",
-        @"Directory\shellex\ContextMenuHandlers",
-        @"Directory\Background\shell",
-        @"Folder\shell",
-        @"Folder\shellex\ContextMenuHandlers",
-        @"DesktopBackground\shell"
+    // 主要的右键菜单位置
+    private static readonly (string Path, string FileType)[] ScanPaths = [
+        (@"*\shell", "所有文件"),
+        (@"*\shellex\ContextMenuHandlers", "所有文件(SH)"),
+        (@"*\shellex\PropertySheetHandlers", "所有文件(属性)"),
+        (@"AllFilesystemObjects\shell", "文件系统对象"),
+        (@"Directory\shell", "文件夹"),
+        (@"Directory\shellex\ContextMenuHandlers", "文件夹(SH)"),
+        (@"Directory\Background\shell", "文件夹背景"),
+        (@"Folder\shell", "文件夹(旧)"),
+        (@"Folder\shellex\ContextMenuHandlers", "文件夹(旧)(SH)"),
+        (@"DesktopBackground\shell", "桌面"),
+        (@"DesktopBackground\shellex\ContextMenuHandlers", "桌面(SH)"),
+        (@"LibraryFolder\shell", "库文件夹"),
+        (@"LibraryFolder\Background\shell", "库背景"),
+        (@"Drive\shell", "磁盘驱动器"),
+        (@"Drive\shellex\ContextMenuHandlers", "磁盘(SH)"),
+    ];
+
+    // 常见文件扩展名的右键菜单
+    private static readonly string[] CommonExtensions = [
+        @".txt", @".html", @".htm", @".pdf", @".jpg", @".jpeg", @".png",
+        @".gif", @".bmp", @".mp3", @".mp4", @".avi", @".zip", @".rar",
+        @".exe", @".dll", @".sys", @".log", @".xml", @".json", @".csv"
     ];
 
     /// <summary>获取所有右键菜单项</summary>
@@ -31,23 +46,24 @@ public static class ContextMenuManager
         {
             var items = new List<ContextMenuItem>();
 
-            // 当前用户
-            foreach (var basePath in FileTypePaths)
+            // 扫描标准路径
+            foreach (var (path, fileType) in ScanPaths)
             {
-                ScanRegistryKey(Registry.CurrentUser, basePath, $"HKCU\\{basePath}", items);
+                ScanShellKey(Registry.CurrentUser, path, fileType, items);
+                ScanShellKey(Registry.LocalMachine, path, fileType, items);
             }
 
-            // 本地机器
-            foreach (var basePath in FileTypePaths)
+            // 扫描常见扩展名
+            foreach (var ext in CommonExtensions)
             {
-                ScanRegistryKey(Registry.LocalMachine, basePath, $"HKLM\\{basePath}", items);
+                ScanShellKey(Registry.ClassesRoot, ext + @"\shell", $"扩展名({ext})", items);
             }
 
             return items;
         }).ConfigureAwait(false);
     }
 
-    private static void ScanRegistryKey(RegistryKey hive, string keyPath, string displayPath, List<ContextMenuItem> items)
+    private static void ScanShellKey(RegistryKey hive, string keyPath, string fileType, List<ContextMenuItem> items)
     {
         try
         {
@@ -61,25 +77,16 @@ public static class ContextMenuManager
                     using var subKey = key.OpenSubKey(subKeyName);
                     if (subKey == null) continue;
 
-                    var command = "";
+                    var command = GetCommand(subKey);
+                    var displayName = GetDisplayName(subKey, subKeyName);
 
-                    // 检查 shell\Name\command
-                    using var cmdKey = subKey.OpenSubKey("command");
-                    if (cmdKey != null)
-                    {
-                        command = cmdKey.GetValue("")?.ToString() ?? "";
-                    }
-
-                    // 如果没有 command 子键，取默认值
-                    if (string.IsNullOrEmpty(command))
-                    {
-                        command = subKey.GetValue("")?.ToString() ?? "";
-                    }
+                    // 检查是否被禁用
+                    var isEnabled = subKey.GetValue("LegacyDisable") == null
+                                 && subKey.GetValue("ProgrammaticAccessOnly") == null;
 
                     if (!string.IsNullOrEmpty(command))
                     {
-                        var fileType = GetFileTypeFromPath(displayPath);
-                        items.Add(new ContextMenuItem(subKeyName, command, $"{displayPath}\\{subKeyName}", fileType, true));
+                        items.Add(new ContextMenuItem(displayName, command, $"{keyPath}\\{subKeyName}", fileType, isEnabled));
                     }
                 }
                 catch { }
@@ -88,13 +95,55 @@ public static class ContextMenuManager
         catch { }
     }
 
-    private static string GetFileTypeFromPath(string path)
+    private static string GetCommand(RegistryKey subKey)
     {
-        if (path.Contains("*")) return "所有文件";
-        if (path.Contains("Directory")) return "文件夹";
-        if (path.Contains("DesktopBackground")) return "桌面";
-        if (path.Contains("Folder")) return "文件夹";
-        return "其他";
+        // 1. 检查 command 子键
+        using var cmdKey = subKey.OpenSubKey("command");
+        if (cmdKey != null)
+        {
+            var cmd = cmdKey.GetValue("")?.ToString();
+            if (!string.IsNullOrEmpty(cmd)) return cmd;
+        }
+
+        // 2. 检查 DelegateExecute（常见的替代方式）
+        var delegateExecute = subKey.GetValue("DelegateExecute")?.ToString();
+        if (!string.IsNullOrEmpty(delegateExecute))
+            return $"[Delegate: {delegateExecute[..Math.Min(32, delegateExecute.Length)]}...]";
+
+        // 3. 检查默认值
+        var defaultCmd = subKey.GetValue("")?.ToString();
+        if (!string.IsNullOrEmpty(defaultCmd) && defaultCmd.Length > 3)
+            return defaultCmd;
+
+        // 4. 检查 Icon（可能是 ShellEx 类型）
+        var icon = subKey.GetValue("Icon")?.ToString();
+        if (!string.IsNullOrEmpty(icon))
+            return $"[ShellEx]";
+
+        return "";
+    }
+
+    private static string GetDisplayName(RegistryKey subKey, string fallbackName)
+    {
+        // 优先用 MUIVerb（多语言显示名）
+        var muiVerb = subKey.GetValue("MUIVerb")?.ToString();
+        if (!string.IsNullOrEmpty(muiVerb))
+        {
+            // 解析 @resource.dll,-ID 格式
+            if (muiVerb.StartsWith('@'))
+                return fallbackName; // 无法解析资源，用键名
+            return muiVerb;
+        }
+
+        // 用默认值（如果不是命令）
+        var defaultValue = subKey.GetValue("")?.ToString();
+        if (!string.IsNullOrEmpty(defaultValue)
+            && !defaultValue.Contains('%')
+            && !defaultValue.Contains("rundll32")
+            && defaultValue.Length < 100)
+            return defaultValue;
+
+        return fallbackName;
     }
 
     /// <summary>禁用右键菜单项</summary>
@@ -102,18 +151,12 @@ public static class ContextMenuManager
     {
         await Task.Run(() =>
         {
-            var hive = item.KeyPath.StartsWith("HKLM") ? Registry.LocalMachine : Registry.CurrentUser;
-            var keyPath = item.KeyPath.Replace("HKLM\\", "").Replace("HKCU\\", "");
-
-            // 获取父键路径和子键名称
-            var lastSlash = keyPath.LastIndexOf('\\');
-            var parentPath = keyPath[..lastSlash];
-            var subKeyName = keyPath[(lastSlash + 1)..];
+            var (hive, subPath) = ParseKeyPath(item.KeyPath);
+            var (parentPath, subKeyName) = SplitPath(subPath);
 
             using var parentKey = hive.OpenSubKey(parentPath, true);
             if (parentKey == null) return;
 
-            // 添加 LegacyDisable 值来禁用
             using var subKey = parentKey.OpenSubKey(subKeyName, true);
             subKey?.SetValue("LegacyDisable", "", RegistryValueKind.String);
         }).ConfigureAwait(false);
@@ -124,18 +167,15 @@ public static class ContextMenuManager
     {
         await Task.Run(() =>
         {
-            var hive = item.KeyPath.StartsWith("HKLM") ? Registry.LocalMachine : Registry.CurrentUser;
-            var keyPath = item.KeyPath.Replace("HKLM\\", "").Replace("HKCU\\", "");
-
-            var lastSlash = keyPath.LastIndexOf('\\');
-            var parentPath = keyPath[..lastSlash];
-            var subKeyName = keyPath[(lastSlash + 1)..];
+            var (hive, subPath) = ParseKeyPath(item.KeyPath);
+            var (parentPath, subKeyName) = SplitPath(subPath);
 
             using var parentKey = hive.OpenSubKey(parentPath, true);
             if (parentKey == null) return;
 
             using var subKey = parentKey.OpenSubKey(subKeyName, true);
             subKey?.DeleteValue("LegacyDisable", false);
+            subKey?.DeleteValue("ProgrammaticAccessOnly", false);
         }).ConfigureAwait(false);
     }
 
@@ -144,15 +184,28 @@ public static class ContextMenuManager
     {
         await Task.Run(() =>
         {
-            var hive = item.KeyPath.StartsWith("HKLM") ? Registry.LocalMachine : Registry.CurrentUser;
-            var keyPath = item.KeyPath.Replace("HKLM\\", "").Replace("HKCU\\", "");
-
-            var lastSlash = keyPath.LastIndexOf('\\');
-            var parentPath = keyPath[..lastSlash];
-            var subKeyName = keyPath[(lastSlash + 1)..];
+            var (hive, subPath) = ParseKeyPath(item.KeyPath);
+            var (parentPath, subKeyName) = SplitPath(subPath);
 
             using var parentKey = hive.OpenSubKey(parentPath, true);
             parentKey?.DeleteSubKeyTree(subKeyName, false);
         }).ConfigureAwait(false);
+    }
+
+    private static (RegistryKey hive, string subPath) ParseKeyPath(string fullPath)
+    {
+        if (fullPath.StartsWith("HKLM\\"))
+            return (Registry.LocalMachine, fullPath[5..]);
+        if (fullPath.StartsWith("HKCU\\"))
+            return (Registry.CurrentUser, fullPath[5..]);
+        if (fullPath.StartsWith("HKCR\\"))
+            return (Registry.ClassesRoot, fullPath[5..]);
+        return (Registry.CurrentUser, fullPath);
+    }
+
+    private static (string parent, string child) SplitPath(string path)
+    {
+        var lastSlash = path.LastIndexOf('\\');
+        return (path[..lastSlash], path[(lastSlash + 1)..]);
     }
 }
