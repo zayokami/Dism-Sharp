@@ -11,6 +11,7 @@ namespace DismSharp.UI.ViewModels;
 public partial class Win11FeaturesViewModel : ViewModelBase
 {
     private static readonly ILogger<Win11FeaturesViewModel> _logger = LoggingService.GetLogger<Win11FeaturesViewModel>();
+    private bool _isLoadingData;
 
     [ObservableProperty]
     private ObservableCollection<WsaAppInfo> _wsaApps = [];
@@ -36,45 +37,57 @@ public partial class Win11FeaturesViewModel : ViewModelBase
     [RelayCommand]
     private async Task LoadDataAsync()
     {
-        await ExecuteLoadAsync(async () =>
+        _isLoadingData = true;
+        try
         {
-            var wsaTask = WsaManager.IsWsaInstalledAsync();
-            var wsaAppsTask = WsaManager.GetInstalledAppsAsync();
-            var wslTask = WslManager.GetDistrosAsync();
+            await ExecuteLoadAsync(async () =>
+            {
+                var wsaTask = WsaManager.IsWsaInstalledAsync();
+                var wsaAppsTask = WsaManager.GetInstalledAppsAsync();
+                var wslTask = WslManager.GetDistrosAsync();
 
-            await Task.WhenAll(wsaTask, wsaAppsTask, wslTask);
+                await Task.WhenAll(wsaTask, wsaAppsTask, wslTask);
 
-            IsWsaInstalled = wsaTask.Result;
-            WsaApps = new ObservableCollection<WsaAppInfo>(wsaAppsTask.Result);
-            WslDistros = new ObservableCollection<WslDistroInfo>(wslTask.Result);
+                IsWsaInstalled = wsaTask.Result;
+                WsaApps = new ObservableCollection<WsaAppInfo>(wsaAppsTask.Result);
+                WslDistros = new ObservableCollection<WslDistroInfo>(wslTask.Result);
 
-            IsWidgetsEnabled = WidgetsManager.IsEnabled();
-            IsWidgetsTaskbarEnabled = WidgetsManager.IsTaskbarButtonEnabled();
-            IsCopilotEnabled = CopilotManager.IsEnabled();
-            IsCopilotTaskbarEnabled = CopilotManager.IsTaskbarButtonEnabled();
-        }, "正在加载 Win11 功能...");
+                IsWidgetsEnabled = WidgetsManager.IsEnabled();
+                IsWidgetsTaskbarEnabled = WidgetsManager.IsTaskbarButtonEnabled();
+                IsCopilotEnabled = CopilotManager.IsEnabled();
+                IsCopilotTaskbarEnabled = CopilotManager.IsTaskbarButtonEnabled();
+            }, "正在加载 Win11 功能...");
+        }
+        finally
+        {
+            _isLoadingData = false;
+        }
     }
 
     partial void OnIsWidgetsEnabledChanged(bool value)
     {
+        if (_isLoadingData) return;
         WidgetsManager.SetEnabled(value);
         SetSuccess($"小组件已{(value ? "启用" : "禁用")}，可能需要重启资源管理器");
     }
 
     partial void OnIsWidgetsTaskbarEnabledChanged(bool value)
     {
+        if (_isLoadingData) return;
         WidgetsManager.SetTaskbarButtonEnabled(value);
         SetSuccess($"任务栏小组件按钮已{(value ? "显示" : "隐藏")}");
     }
 
     partial void OnIsCopilotEnabledChanged(bool value)
     {
+        if (_isLoadingData) return;
         CopilotManager.SetEnabled(value);
         SetSuccess($"Copilot 已{(value ? "启用" : "禁用")}，可能需要重启");
     }
 
     partial void OnIsCopilotTaskbarEnabledChanged(bool value)
     {
+        if (_isLoadingData) return;
         CopilotManager.SetTaskbarButtonEnabled(value);
         SetSuccess($"任务栏 Copilot 按钮已{(value ? "显示" : "隐藏")}");
     }
