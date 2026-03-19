@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core.CleanupRules;
 using DismSharp.Core.Modules;
+using DismSharp.UI.Helpers;
 
 namespace DismSharp.UI.ViewModels;
 
@@ -108,6 +109,15 @@ public partial class CleanupViewModel : ViewModelBase
     private async Task CleanAsync()
     {
         if (_scanResults is null) return;
+
+        var selectedCount = RuleItems.Count(r => r.IsSelected);
+        var totalSize = RuleItems.Where(r => r.IsSelected).Sum(r => r.TotalBytes);
+        if (selectedCount == 0) return;
+
+        if (!DialogHelper.ConfirmDangerous(
+            $"即将清理 {selectedCount} 个项目，预计释放 {CleanupEngine.FormatBytes(totalSize)} 空间。\n\n此操作不可撤销，确定要继续吗？",
+            "清理确认"))
+            return;
 
         IsCleaning = true;
         OperationProgress = 0;

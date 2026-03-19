@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core.Modules;
+using DismSharp.UI.Helpers;
 using DismSharp.UI.Services;
 using Microsoft.Extensions.Logging;
 
@@ -42,6 +43,11 @@ public partial class BootViewModel : ViewModelBase
     {
         if (item is null) return;
 
+        if (!DialogHelper.Confirm(
+            $"确定要禁用启动项 \"{item.Name}\" 吗？\n\n禁用后可以随时重新启用。",
+            "禁用确认"))
+            return;
+
         await ExecuteOperationAsync(async progress =>
         {
             progress.Report(50);
@@ -71,6 +77,11 @@ public partial class BootViewModel : ViewModelBase
     private async Task DeleteItemAsync(StartupItem? item)
     {
         if (item is null) return;
+
+        if (!DialogHelper.ConfirmDangerous(
+            $"确定要删除启动项 \"{item.Name}\" 吗？\n\n此操作将从注册表中永久删除该项。",
+            "删除确认"))
+            return;
 
         await ExecuteOperationAsync(async progress =>
         {

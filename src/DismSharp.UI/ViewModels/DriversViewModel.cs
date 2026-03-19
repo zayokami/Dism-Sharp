@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core;
 using DismSharp.Core.Modules;
 using DismSharp.Core.Native;
+using DismSharp.UI.Helpers;
 
 namespace DismSharp.UI.ViewModels;
 
@@ -82,6 +83,11 @@ public partial class DriversViewModel : ViewModelBase
     private async Task RemoveDriverAsync(DriverPackageInfo? driver)
     {
         if (driver is null || driver.InBox) return;
+
+        if (!DialogHelper.ConfirmDangerous(
+            $"确定要删除驱动 \"{driver.PublishedName}\" 吗？\n\n删除后可能需要重新安装该驱动。",
+            "删除确认"))
+            return;
 
         var publishedName = driver.PublishedName;
         await ExecuteOperationAsync(async _ =>

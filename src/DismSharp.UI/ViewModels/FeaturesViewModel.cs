@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core;
 using DismSharp.Core.Modules;
 using DismSharp.Core.Native;
+using DismSharp.UI.Helpers;
 
 namespace DismSharp.UI.ViewModels;
 
@@ -83,6 +84,11 @@ public partial class FeaturesViewModel : ViewModelBase
     private async Task DisableFeatureAsync(FeatureDisplayItem? feature)
     {
         if (feature is null) return;
+
+        if (!DialogHelper.Confirm(
+            $"确定要禁用功能 \"{feature.FeatureName}\" 吗？\n\n禁用后需要重新启用才能使用该功能。",
+            "禁用确认"))
+            return;
 
         var name = feature.FeatureName;
         await ExecuteOperationAsync(async progress =>

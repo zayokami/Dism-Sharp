@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core;
+using DismSharp.UI.Helpers;
 using DismSharp.UI.Services;
 using Microsoft.Extensions.Logging;
 
@@ -45,6 +46,11 @@ public partial class AppxViewModel : ViewModelBase
     private async Task RemovePackageAsync(DismSharpSession.AppxPackageInfo? package)
     {
         if (package is null) return;
+
+        if (!DialogHelper.ConfirmDangerous(
+            $"确定要删除预配包 \"{package.DisplayName}\" 吗？\n\n删除后可能无法恢复某些应用功能。",
+            "删除确认"))
+            return;
 
         await ExecuteOperationAsync(async _ =>
         {

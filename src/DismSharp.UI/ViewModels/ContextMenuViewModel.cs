@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core.Modules;
+using DismSharp.UI.Helpers;
 using DismSharp.UI.Services;
 using Microsoft.Extensions.Logging;
 
@@ -42,6 +43,11 @@ public partial class ContextMenuViewModel : ViewModelBase
     {
         if (item is null) return;
 
+        if (!DialogHelper.Confirm(
+            $"确定要禁用右键菜单项 \"{item.Name}\" 吗？",
+            "禁用确认"))
+            return;
+
         await ExecuteOperationAsync(async progress =>
         {
             progress.Report(50);
@@ -71,6 +77,11 @@ public partial class ContextMenuViewModel : ViewModelBase
     private async Task DeleteItemAsync(ContextMenuItem? item)
     {
         if (item is null) return;
+
+        if (!DialogHelper.ConfirmDangerous(
+            $"确定要删除右键菜单项 \"{item.Name}\" 吗？\n\n此操作将从注册表中永久删除。",
+            "删除确认"))
+            return;
 
         await ExecuteOperationAsync(async progress =>
         {
