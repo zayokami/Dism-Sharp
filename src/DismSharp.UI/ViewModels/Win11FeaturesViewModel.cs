@@ -55,36 +55,28 @@ public partial class Win11FeaturesViewModel : ViewModelBase
         }, "正在加载 Win11 功能...");
     }
 
-    [RelayCommand]
-    private void ToggleWidgets()
+    partial void OnIsWidgetsEnabledChanged(bool value)
     {
-        WidgetsManager.SetEnabled(!IsWidgetsEnabled);
-        IsWidgetsEnabled = WidgetsManager.IsEnabled();
-        SetSuccess($"小组件已{(IsWidgetsEnabled ? "启用" : "禁用")}，可能需要重启资源管理器");
+        WidgetsManager.SetEnabled(value);
+        SetSuccess($"小组件已{(value ? "启用" : "禁用")}，可能需要重启资源管理器");
     }
 
-    [RelayCommand]
-    private void ToggleWidgetsTaskbar()
+    partial void OnIsWidgetsTaskbarEnabledChanged(bool value)
     {
-        WidgetsManager.SetTaskbarButtonEnabled(!IsWidgetsTaskbarEnabled);
-        IsWidgetsTaskbarEnabled = WidgetsManager.IsTaskbarButtonEnabled();
-        SetSuccess($"任务栏小组件按钮已{(IsWidgetsTaskbarEnabled ? "显示" : "隐藏")}");
+        WidgetsManager.SetTaskbarButtonEnabled(value);
+        SetSuccess($"任务栏小组件按钮已{(value ? "显示" : "隐藏")}");
     }
 
-    [RelayCommand]
-    private void ToggleCopilot()
+    partial void OnIsCopilotEnabledChanged(bool value)
     {
-        CopilotManager.SetEnabled(!IsCopilotEnabled);
-        IsCopilotEnabled = CopilotManager.IsEnabled();
-        SetSuccess($"Copilot 已{(IsCopilotEnabled ? "启用" : "禁用")}，可能需要重启");
+        CopilotManager.SetEnabled(value);
+        SetSuccess($"Copilot 已{(value ? "启用" : "禁用")}，可能需要重启");
     }
 
-    [RelayCommand]
-    private void ToggleCopilotTaskbar()
+    partial void OnIsCopilotTaskbarEnabledChanged(bool value)
     {
-        CopilotManager.SetTaskbarButtonEnabled(!IsCopilotTaskbarEnabled);
-        IsCopilotTaskbarEnabled = CopilotManager.IsTaskbarButtonEnabled();
-        SetSuccess($"任务栏 Copilot 按钮已{(IsCopilotTaskbarEnabled ? "显示" : "隐藏")}");
+        CopilotManager.SetTaskbarButtonEnabled(value);
+        SetSuccess($"任务栏 Copilot 按钮已{(value ? "显示" : "隐藏")}");
     }
 
     [RelayCommand]

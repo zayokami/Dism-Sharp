@@ -41,8 +41,8 @@
                                 <TextBlock Text="在任务栏显示小组件按钮" Opacity="0.7" Margin="0,8,0,0" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <ui:ToggleSwitch IsChecked="{Binding IsWidgetsEnabled}" Checked="ToggleWidgets_Checked" Unchecked="ToggleWidgets_Unchecked" />
-                                <ui:ToggleSwitch IsChecked="{Binding IsWidgetsTaskbarEnabled}" Checked="ToggleWidgetsTaskbar_Checked" Unchecked="ToggleWidgetsTaskbar_Unchecked" Margin="16,0,0,0" />
+                                <ui:ToggleSwitch IsChecked="{Binding IsWidgetsEnabled, Mode=TwoWay}" />
+                                <ui:ToggleSwitch IsChecked="{Binding IsWidgetsTaskbarEnabled, Mode=TwoWay}" Margin="16,0,0,0" />
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -62,8 +62,8 @@
                                 <TextBlock Text="在任务栏显示 Copilot 按钮" Opacity="0.7" Margin="0,8,0,0" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <ui:ToggleSwitch IsChecked="{Binding IsCopilotEnabled}" Checked="ToggleCopilot_Checked" Unchecked="ToggleCopilot_Unchecked" />
-                                <ui:ToggleSwitch IsChecked="{Binding IsCopilotTaskbarEnabled}" Checked="ToggleCopilotTaskbar_Checked" Unchecked="ToggleCopilotTaskbar_Unchecked" Margin="16,0,0,0" />
+                                <ui:ToggleSwitch IsChecked="{Binding IsCopilotEnabled, Mode=TwoWay}" />
+                                <ui:ToggleSwitch IsChecked="{Binding IsCopilotTaskbarEnabled, Mode=TwoWay}" Margin="16,0,0,0" />
                             </StackPanel>
                         </Grid>
                     </StackPanel>
