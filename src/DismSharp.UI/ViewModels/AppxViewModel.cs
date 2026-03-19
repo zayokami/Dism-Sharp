@@ -26,6 +26,12 @@ public partial class AppxViewModel : ViewModelBase
     [ObservableProperty]
     private int _totalCount;
 
+    [ObservableProperty]
+    private ObservableCollection<SelectableItem<DismSharpSession.AppxPackageInfo>> _selectablePackages = [];
+
+    [ObservableProperty]
+    private int _selectedCount;
+
     [RelayCommand]
     private async Task LoadPackagesAsync()
     {
@@ -71,6 +77,48 @@ public partial class AppxViewModel : ViewModelBase
                 p.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                 p.PackageName.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
+        SelectablePackages = new ObservableCollection<SelectableItem<DismSharpSession.AppxPackageInfo>>(
+            filtered.Select(p => new SelectableItem<DismSharpSession.AppxPackageInfo>(p)));
         FilteredPackages = new ObservableCollection<DismSharpSession.AppxPackageInfo>(filtered);
+        UpdateSelectedCount();
+    }
+
+    private void UpdateSelectedCount()
+    {
+        SelectedCount = SelectablePackages.Count(p => p.IsSelected);
+    }
+
+    [RelayCommand]
+    private void ToggleSelectAll()
+    {
+        bool allSelected = SelectablePackages.All(p => p.IsSelected);
+        foreach (var item in SelectablePackages)
+            item.IsSelected = !allSelected;
+        UpdateSelectedCount();
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedAsync()
+    {
+        var selected = SelectablePackages.Where(p => p.IsSelected).Select(p => p.Item).ToList();
+        if (selected.Count == 0) return;
+
+        if (!DialogHelper.ConfirmDangerous(
+            $"确定要删除选中的 {selected.Count} 个预配包吗？\n\n删除后可能无法恢复某些应用功能。",
+            "批量删除确认"))
+            return;
+
+        await ExecuteOperationAsync(async progress =>
+        {
+            int total = selected.Count;
+            for (int i = 0; i < total; i++)
+            {
+                progress.Report((int)((double)i / total * 100));
+                using var session = DismSharpSession.OpenOnline();
+                session.RemoveAppxPackage(selected[i].PackageName);
+            }
+            SetSuccess($"已成功删除 {total} 个预配包");
+            await LoadPackagesAsync();
+        });
     }
 }

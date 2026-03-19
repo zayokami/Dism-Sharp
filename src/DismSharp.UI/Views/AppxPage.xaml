@@ -40,35 +40,51 @@
                     IsOperating="{Binding IsOperating}"
                     OperationProgress="{Binding OperationProgress}" />
 
+                <!-- Batch operations -->
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <ui:Button Content="全选/取消全选" Appearance="Secondary" FontSize="12"
+                               Command="{Binding ToggleSelectAllCommand}" Margin="0,0,8,0" />
+                    <ui:Button Content="删除选中" Appearance="Danger" FontSize="12"
+                               Command="{Binding DeleteSelectedAsyncCommand}"
+                               IsEnabled="{Binding SelectedCount, Converter={StaticResource GreaterThanZero}}"
+                               Margin="0,0,8,0" />
+                    <TextBlock Text="{Binding SelectedCount, StringFormat='已选中 {0} 项'}"
+                               VerticalAlignment="Center" Opacity="0.6" />
+                </StackPanel>
+
                 <!-- Package list -->
-                <ItemsControl ItemsSource="{Binding FilteredPackages}" Margin="0,12,0,0">
+                <ItemsControl ItemsSource="{Binding SelectablePackages}" Margin="0,12,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Padding="12,10" Margin="0,0,0,4"
                                     Background="{DynamicResource CardBackground}" CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{Binding DisplayName}" FontWeight="Medium" FontSize="14" />
-                                        <TextBlock Text="{Binding PackageName}" Opacity="0.6" FontSize="12" Margin="0,2,0,0" />
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              VerticalAlignment="Center" Margin="0,0,8,0" />
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Item.DisplayName}" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock Text="{Binding Item.PackageName}" Opacity="0.6" FontSize="12" Margin="0,2,0,0" />
                                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                            <TextBlock Text="{Binding Version}" Opacity="0.5" FontSize="11" Margin="0,0,12,0" />
-                                            <TextBlock Text="{Binding Architecture}" Opacity="0.5" FontSize="11" />
+                                            <TextBlock Text="{Binding Item.Version}" Opacity="0.5" FontSize="11" Margin="0,0,12,0" />
+                                            <TextBlock Text="{Binding Item.Architecture}" Opacity="0.5" FontSize="11" />
                                         </StackPanel>
                                     </StackPanel>
 
                                     <ui:Button
-                                        Grid.Column="1"
+                                        Grid.Column="2"
                                         Content="删除"
                                         Appearance="Danger"
                                         FontSize="12"
                                         Padding="12,6"
                                         Command="{Binding DataContext.RemovePackageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}" />
+                                        CommandParameter="{Binding Item}" />
                                 </Grid>
                             </Border>
                         </DataTemplate>

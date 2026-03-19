@@ -17,6 +17,7 @@
             <converters:ReleaseTypeToStringConverter x:Key="ReleaseTypeToString" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
             <converters:InverseBoolConverter x:Key="InverseBool" />
+            <converters:GreaterThanZeroConverter x:Key="GreaterThanZero" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -26,6 +26,12 @@ public partial class ContextMenuViewModel : ViewModelBase
     [ObservableProperty]
     private int _totalCount;
 
+    [ObservableProperty]
+    private ObservableCollection<SelectableItem<ContextMenuItem>> _selectableItems = [];
+
+    [ObservableProperty]
+    private int _selectedCount;
+
     [RelayCommand]
     private async Task LoadItemsAsync()
     {
@@ -103,6 +109,71 @@ public partial class ContextMenuViewModel : ViewModelBase
                 i.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                 i.Command.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
+        SelectableItems = new ObservableCollection<SelectableItem<ContextMenuItem>>(
+            filtered.Select(i => new SelectableItem<ContextMenuItem>(i)));
         FilteredItems = new ObservableCollection<ContextMenuItem>(filtered);
+        UpdateSelectedCount();
+    }
+
+    private void UpdateSelectedCount()
+    {
+        SelectedCount = SelectableItems.Count(i => i.IsSelected);
+    }
+
+    [RelayCommand]
+    private void ToggleSelectAll()
+    {
+        bool allSelected = SelectableItems.All(i => i.IsSelected);
+        foreach (var item in SelectableItems)
+            item.IsSelected = !allSelected;
+        UpdateSelectedCount();
+    }
+
+    [RelayCommand]
+    private async Task DisableSelectedAsync()
+    {
+        var selected = SelectableItems.Where(i => i.IsSelected).Select(i => i.Item).ToList();
+        if (selected.Count == 0) return;
+
+        if (!DialogHelper.Confirm(
+            $"确定要禁用选中的 {selected.Count} 个右键菜单项吗？",
+            "批量禁用确认"))
+            return;
+
+        await ExecuteOperationAsync(async progress =>
+        {
+            int total = selected.Count;
+            for (int i = 0; i < total; i++)
+            {
+                progress.Report((int)((double)i / total * 100));
+                await ContextMenuManager.DisableMenuItemAsync(selected[i]);
+            }
+            SetSuccess($"已禁用 {total} 个右键菜单项");
+            await LoadItemsAsync();
+        });
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedAsync()
+    {
+        var selected = SelectableItems.Where(i => i.IsSelected).Select(i => i.Item).ToList();
+        if (selected.Count == 0) return;
+
+        if (!DialogHelper.ConfirmDangerous(
+            $"确定要删除选中的 {selected.Count} 个右键菜单项吗？\n\n此操作将从注册表中永久删除。",
+            "批量删除确认"))
+            return;
+
+        await ExecuteOperationAsync(async progress =>
+        {
+            int total = selected.Count;
+            for (int i = 0; i < total; i++)
+            {
+                progress.Report((int)((double)i / total * 100));
+                await ContextMenuManager.DeleteMenuItemAsync(selected[i]);
+            }
+            SetSuccess($"已删除 {total} 个右键菜单项");
+            await LoadItemsAsync();
+        });
     }
 }

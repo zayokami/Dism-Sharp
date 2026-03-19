@@ -35,36 +35,56 @@
                     IsOperating="{Binding IsOperating}"
                     OperationProgress="{Binding OperationProgress}" />
 
-                <ItemsControl ItemsSource="{Binding FilteredItems}" Margin="0,12,0,0">
+                <!-- Batch operations -->
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <ui:Button Content="全选/取消全选" Appearance="Secondary" FontSize="12"
+                               Command="{Binding ToggleSelectAllCommand}" Margin="0,0,8,0" />
+                    <ui:Button Content="禁用选中" Appearance="Danger" FontSize="12"
+                               Command="{Binding DisableSelectedAsyncCommand}"
+                               IsEnabled="{Binding SelectedCount, Converter={StaticResource GreaterThanZero}}"
+                               Margin="0,0,8,0" />
+                    <ui:Button Content="删除选中" Appearance="Danger" FontSize="12"
+                               Command="{Binding DeleteSelectedAsyncCommand}"
+                               IsEnabled="{Binding SelectedCount, Converter={StaticResource GreaterThanZero}}"
+                               Margin="0,0,8,0" />
+                    <TextBlock Text="{Binding SelectedCount, StringFormat='已选中 {0} 项'}"
+                               VerticalAlignment="Center" Opacity="0.6" />
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding SelectableItems}" Margin="0,12,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Padding="12,10" Margin="0,0,0,4"
                                     Background="{DynamicResource CardBackground}" CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="14" />
-                                        <TextBlock Text="{Binding Command}" Opacity="0.6" FontSize="11" Margin="0,2,0,0"
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              VerticalAlignment="Center" Margin="0,0,8,0" />
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Item.Name}" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock Text="{Binding Item.Command}" Opacity="0.6" FontSize="11" Margin="0,2,0,0"
                                                    TextTrimming="CharacterEllipsis" MaxWidth="600" />
-                                        <TextBlock Text="{Binding Location}" Opacity="0.4" FontSize="10" Margin="0,2,0,0" />
+                                        <TextBlock Text="{Binding Item.Location}" Opacity="0.4" FontSize="10" Margin="0,2,0,0" />
                                     </StackPanel>
 
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal">
                                         <ui:Button Content="禁用" Appearance="Danger" FontSize="12" Padding="10,4"
-                                                   Visibility="{Binding Enabled, Converter={StaticResource BoolToVisibility}}"
+                                                   Visibility="{Binding Item.Enabled, Converter={StaticResource BoolToVisibility}}"
                                                    Command="{Binding DataContext.DisableItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                   CommandParameter="{Binding}" />
+                                                   CommandParameter="{Binding Item}" />
                                         <ui:Button Content="启用" Appearance="Primary" FontSize="12" Padding="10,4"
-                                                   Visibility="{Binding Enabled, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                   Visibility="{Binding Item.Enabled, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
                                                    Command="{Binding DataContext.EnableItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                   CommandParameter="{Binding}" />
+                                                   CommandParameter="{Binding Item}" />
                                         <ui:Button Content="删除" Appearance="Secondary" FontSize="12" Padding="10,4" Margin="4,0,0,0"
                                                    Command="{Binding DataContext.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                   CommandParameter="{Binding}" />
+                                                   CommandParameter="{Binding Item}" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
