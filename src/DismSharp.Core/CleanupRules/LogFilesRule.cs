@@ -1,6 +1,7 @@
 namespace DismSharp.Core.CleanupRules;
 
-using System.Diagnostics;
+using DismSharp.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 /// <summary>系统日志文件清理规则</summary>
 public class LogFilesRule : FileCleanupRule
@@ -31,7 +32,7 @@ public class LogFilesRule : FileCleanupRule
                     var info = new FileInfo(reportLog);
                     entries.Add(new CleanupEntry(reportLog, info.Length));
                 }
-                catch (Exception ex) { Debug.WriteLine($"[{GetType().Name}] Error: {ex.Message}"); }
+                catch (Exception ex) { DismLogger.GetLogger(GetType().Name).LogError(ex, "LogFilesRule scan failed"); }
             }
 
             return entries;

@@ -1,5 +1,6 @@
-using System.Diagnostics;
 using DismSharp.Core.CleanupRules;
+using DismSharp.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace DismSharp.Core.Modules;
 
@@ -50,7 +51,7 @@ public static class CleanupEngine
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CleanupEngine] Scan Error: {ex.Message}");
+                DismLogger.GetLogger("CleanupEngine").LogError(ex, "Scan failed");
                 results.Add(new CleanupScanResult(rule, [], 0));
             }
         }
@@ -84,7 +85,7 @@ public static class CleanupEngine
                 totalCleanedBytes += result.TotalBytes; // 近似值
                 progress?.Report((result.Rule.Name, i, selectedResults.Count, cleaned));
             }
-            catch (Exception ex) { Debug.WriteLine($"[CleanupEngine] Clean Error: {ex.Message}"); }
+            catch (Exception ex) { DismLogger.GetLogger("CleanupEngine").LogError(ex, "Clean failed"); }
         }
 
         return totalCleanedBytes;

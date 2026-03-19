@@ -1,5 +1,6 @@
-using System.Diagnostics;
+using DismSharp.Core.Logging;
 using DismSharp.Core.Native;
+using Microsoft.Extensions.Logging;
 
 namespace DismSharp.Core.CleanupRules;
 
@@ -31,7 +32,7 @@ public class RecycleBinRule : ICleanupRule
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[RecycleBin] Scan error: {ex.Message}");
+                DismLogger.GetLogger("RecycleBin").LogError(ex, "Scan failed");
             }
 
             return entries;
@@ -60,7 +61,7 @@ public class RecycleBinRule : ICleanupRule
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[RecycleBin] Clean error: {ex.Message}");
+                DismLogger.GetLogger("RecycleBin").LogError(ex, "Clean failed");
                 return 0;
             }
         }, cancellationToken);

@@ -1,19 +1,23 @@
-using System.Diagnostics;
 using System.Windows;
 using DismSharp.Core;
 using DismSharp.Core.Helpers;
 using DismSharp.Core.Native;
+using DismSharp.UI.Services;
+using Serilog;
 
 namespace DismSharp.UI;
 
-/// <summary>应用程序入口</summary>
 public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        // 管理员权限检查（manifest 已要求提权，这里做双重检查）
+        // 初始化日志
+        LoggingService.Initialize();
+        Log.Information("Dism# 启动");
+
+        // 管理员权限检查
         if (!PrivilegeHelper.IsRunningAsAdmin())
         {
             MessageBox.Show("请右键以管理员身份运行 Dism#！", "权限不足",
@@ -26,9 +30,11 @@ public partial class App : Application
         try
         {
             DismSharpSession.Initialize(DismLogLevel.DismLogErrors);
+            Log.Information("DISM API 初始化成功");
         }
         catch (DismSharpException ex)
         {
+            Log.Error(ex, "DISM 初始化失败");
             MessageBox.Show($"DISM 初始化失败: {ex.Message}", "错误",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
@@ -37,16 +43,17 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        // 关闭 DISM API
         try
         {
             DismSharpSession.Shutdown();
+            Log.Information("DISM API 已关闭");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[App] Shutdown error: {ex.Message}");
+            Log.Error(ex, "DISM 关闭失败");
         }
 
+        LoggingService.Shutdown();
         base.OnExit(e);
     }
 }

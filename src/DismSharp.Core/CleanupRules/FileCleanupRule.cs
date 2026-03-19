@@ -1,6 +1,7 @@
 namespace DismSharp.Core.CleanupRules;
 
-using System.Diagnostics;
+using DismSharp.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 /// <summary>文件清理规则基类，提供通用的扫描和删除逻辑</summary>
 public abstract class FileCleanupRule : ICleanupRule
@@ -37,7 +38,7 @@ public abstract class FileCleanupRule : ICleanupRule
                         cleaned++;
                     }
                 }
-                catch (Exception ex) { Debug.WriteLine($"[FileCleanupRule] Delete Error: {ex.Message}"); }
+                catch (Exception ex) { DismLogger.GetLogger("FileCleanupRule").LogError(ex, "Delete failed"); }
 
                 progress?.Report((cleaned, total));
             }
@@ -70,10 +71,10 @@ public abstract class FileCleanupRule : ICleanupRule
                     var info = new FileInfo(file);
                     entries.Add(new CleanupEntry(file, info.Length));
                 }
-                catch (Exception ex) { Debug.WriteLine($"[FileCleanupRule] FileInfo Error: {ex.Message}"); }
+                catch (Exception ex) { DismLogger.GetLogger("FileCleanupRule").LogError(ex, "FileInfo failed"); }
             }
         }
-        catch (Exception ex) { Debug.WriteLine($"[FileCleanupRule] Directory Error: {ex.Message}"); }
+        catch (Exception ex) { DismLogger.GetLogger("FileCleanupRule").LogError(ex, "Directory access failed"); }
 
         return entries;
     }

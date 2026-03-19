@@ -1,10 +1,11 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core;
 using DismSharp.Core.Helpers;
 using DismSharp.Core.Modules;
+using DismSharp.UI.Services;
+using Microsoft.Extensions.Logging;
 
 namespace DismSharp.UI.ViewModels;
 
@@ -14,6 +15,8 @@ public record DiskDisplayInfo(string DriveLetter, string VolumeName, string Tota
 /// <summary>仪表盘页面 ViewModel</summary>
 public partial class DashboardViewModel : ObservableObject
 {
+    private static readonly ILogger<DashboardViewModel> _logger = LoggingService.GetLogger<DashboardViewModel>();
+
     [ObservableProperty]
     private string _osName = "";
 
@@ -101,7 +104,7 @@ public partial class DashboardViewModel : ObservableObject
             }
             DiskDrives = diskDisplayList;
         }
-        catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
+        catch (Exception ex) { _logger.LogError(ex, "Dashboard operation failed"); }
 
         // 后台并行：WMI（CPU）+ WMI（可用内存）+ DISM
         LoadingStatus = "正在查询硬件信息...";
@@ -115,7 +118,7 @@ public partial class DashboardViewModel : ObservableObject
                 foreach (var obj in results)
                     return obj["Name"]?.ToString()?.Trim() ?? "未知";
             }
-            catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
+            catch (Exception ex) { _logger.LogError(ex, "Dashboard operation failed"); }
             return "未知";
         });
 
@@ -129,7 +132,7 @@ public partial class DashboardViewModel : ObservableObject
                 foreach (var obj in results)
                     return FileHelper.FormatSize((long)(Convert.ToUInt64(obj["FreePhysicalMemory"]) * 1024));
             }
-            catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
+            catch (Exception ex) { _logger.LogError(ex, "Dashboard operation failed"); }
             return "N/A";
         });
 
@@ -145,7 +148,7 @@ public partial class DashboardViewModel : ObservableObject
                     Ok: true
                 );
             }
-            catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
+            catch (Exception ex) { _logger.LogError(ex, "Dashboard operation failed"); }
             return (Features: 0, Drivers: 0, Packages: 0, Ok: false);
         });
 

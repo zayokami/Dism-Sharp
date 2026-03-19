@@ -1,5 +1,6 @@
-using System.Diagnostics;
+using DismSharp.Core.Logging;
 using DismSharp.Core.Native;
+using Microsoft.Extensions.Logging;
 
 namespace DismSharp.Core.Modules;
 
@@ -49,7 +50,7 @@ public static class DriverManager
 
                     completed++;
                 }
-                catch (Exception ex) { Debug.WriteLine($"[DriverManager] Backup failed: {ex.Message}"); }
+                catch (Exception ex) { DismLogger.GetLogger("DriverManager").LogError(ex, "Backup failed"); }
 
                 progress?.Report((int)((double)completed / drivers.Count * 100));
             }
