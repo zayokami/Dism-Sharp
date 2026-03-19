@@ -240,7 +240,11 @@ public sealed class DismSharpSession : IDisposable
         lock (_lock)
         {
             if (!_initialized)
-                throw new InvalidOperationException("DISM API 尚未初始化，请先调用 DismSharpSession.Initialize()");
+            {
+                int hr = DismApi.DismInitialize(DismLogLevel.DismLogErrors, null, null);
+                DismSharpException.ThrowIfFailed(hr);
+                _initialized = true;
+            }
         }
     }
 }

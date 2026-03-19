@@ -26,19 +26,7 @@ public partial class App : Application
             return;
         }
 
-        // 初始化 DISM API
-        try
-        {
-            DismSharpSession.Initialize(DismLogLevel.DismLogErrors);
-            Log.Information("DISM API 初始化成功");
-        }
-        catch (DismSharpException ex)
-        {
-            Log.Error(ex, "DISM 初始化失败");
-            MessageBox.Show($"DISM 初始化失败: {ex.Message}", "错误",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown();
-        }
+        // DISM API 将在首次使用时自动初始化（延迟加载）
     }
 
     protected override void OnExit(ExitEventArgs e)
