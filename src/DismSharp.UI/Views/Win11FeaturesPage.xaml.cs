@@ -6,6 +6,8 @@ namespace DismSharp.UI.Views;
 
 public partial class Win11FeaturesPage : Page
 {
+    private bool _isUpdating;
+
     public Win11FeaturesPage()
     {
         InitializeComponent();
@@ -19,8 +21,17 @@ public partial class Win11FeaturesPage : Page
 
     private void ToggleWidgets()
     {
-        if (DataContext is Win11FeaturesViewModel vm)
-            vm.ToggleWidgetsCommand.Execute(null);
+        if (_isUpdating) return;
+        _isUpdating = true;
+        try
+        {
+            if (DataContext is Win11FeaturesViewModel vm)
+                vm.ToggleWidgetsCommand.Execute(null);
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
     }
 
     private void ToggleWidgetsTaskbar_Checked(object sender, RoutedEventArgs e) => ToggleWidgetsTaskbar();
@@ -28,8 +39,17 @@ public partial class Win11FeaturesPage : Page
 
     private void ToggleWidgetsTaskbar()
     {
-        if (DataContext is Win11FeaturesViewModel vm)
-            vm.ToggleWidgetsTaskbarCommand.Execute(null);
+        if (_isUpdating) return;
+        _isUpdating = true;
+        try
+        {
+            if (DataContext is Win11FeaturesViewModel vm)
+                vm.ToggleWidgetsTaskbarCommand.Execute(null);
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
     }
 
     private void ToggleCopilot_Checked(object sender, RoutedEventArgs e) => ToggleCopilot();
@@ -37,8 +57,17 @@ public partial class Win11FeaturesPage : Page
 
     private void ToggleCopilot()
     {
-        if (DataContext is Win11FeaturesViewModel vm)
-            vm.ToggleCopilotCommand.Execute(null);
+        if (_isUpdating) return;
+        _isUpdating = true;
+        try
+        {
+            if (DataContext is Win11FeaturesViewModel vm)
+                vm.ToggleCopilotCommand.Execute(null);
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
     }
 
     private void ToggleCopilotTaskbar_Checked(object sender, RoutedEventArgs e) => ToggleCopilotTaskbar();
@@ -46,7 +75,16 @@ public partial class Win11FeaturesPage : Page
 
     private void ToggleCopilotTaskbar()
     {
-        if (DataContext is Win11FeaturesViewModel vm)
-            vm.ToggleCopilotTaskbarCommand.Execute(null);
+        if (_isUpdating) return;
+        _isUpdating = true;
+        try
+        {
+            if (DataContext is Win11FeaturesViewModel vm)
+                vm.ToggleCopilotTaskbarCommand.Execute(null);
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
     }
 }
