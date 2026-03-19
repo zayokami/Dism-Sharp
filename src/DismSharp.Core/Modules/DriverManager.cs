@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DismSharp.Core.Native;
 
 namespace DismSharp.Core.Modules;
@@ -48,16 +49,13 @@ public static class DriverManager
 
                     completed++;
                 }
-                catch
-                {
-                    // 单个驱动备份失败不影响其他驱动
-                }
+                catch (Exception ex) { Debug.WriteLine($"[DriverManager] Backup failed: {ex.Message}"); }
 
                 progress?.Report((int)((double)completed / drivers.Count * 100));
             }
 
             return completed;
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>从备份目录还原驱动</summary>
@@ -75,7 +73,7 @@ public static class DriverManager
         {
             int hr = DismApi.DismAddDriver(handle, driverPath, forceUnsigned);
             DismSharpException.ThrowIfFailed(hr);
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <summary>删除驱动</summary>
@@ -91,7 +89,7 @@ public static class DriverManager
         {
             int hr = DismApi.DismRemoveDriver(handle, driverPublishedName);
             DismSharpException.ThrowIfFailed(hr);
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <summary>扫描备份目录，列出所有可还原的 .inf 文件</summary>

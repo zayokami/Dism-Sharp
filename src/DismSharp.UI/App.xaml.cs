@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using DismSharp.Core;
 using DismSharp.Core.Helpers;
@@ -15,7 +16,7 @@ public partial class App : Application
         // 管理员权限检查（manifest 已要求提权，这里做双重检查）
         if (!PrivilegeHelper.IsRunningAsAdmin())
         {
-            MessageBox.Show("请以管理员身份运行 Dism#！", "权限不足",
+            MessageBox.Show("请右键以管理员身份运行 Dism#！", "权限不足",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
             return;
@@ -41,9 +42,9 @@ public partial class App : Application
         {
             DismSharpSession.Shutdown();
         }
-        catch
+        catch (Exception ex)
         {
-            // 退出时忽略关闭错误
+            Debug.WriteLine($"[App] Shutdown error: {ex.Message}");
         }
 
         base.OnExit(e);

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DismSharp.Core.CleanupRules;
 
 namespace DismSharp.Core.Modules;
@@ -43,13 +44,13 @@ public static class CleanupEngine
 
             try
             {
-                var entries = await rule.ScanAsync(cancellationToken);
+                var entries = await rule.ScanAsync(cancellationToken).ConfigureAwait(false);
                 long totalBytes = entries.Sum(e => e.SizeBytes);
                 results.Add(new CleanupScanResult(rule, entries, totalBytes));
             }
-            catch
+            catch (Exception ex)
             {
-                // 单个规则扫描失败不影响其他
+                Debug.WriteLine($"[CleanupEngine] Scan Error: {ex.Message}");
                 results.Add(new CleanupScanResult(rule, [], 0));
             }
         }
@@ -79,14 +80,11 @@ public static class CleanupEngine
 
             try
             {
-                int cleaned = await result.Rule.CleanAsync(result.Entries, null, cancellationToken);
+                int cleaned = await result.Rule.CleanAsync(result.Entries, null, cancellationToken).ConfigureAwait(false);
                 totalCleanedBytes += result.TotalBytes; // 近似值
                 progress?.Report((result.Rule.Name, i, selectedResults.Count, cleaned));
             }
-            catch
-            {
-                // 单个规则清理失败不影响其他
-            }
+            catch (Exception ex) { Debug.WriteLine($"[CleanupEngine] Clean Error: {ex.Message}"); }
         }
 
         return totalCleanedBytes;

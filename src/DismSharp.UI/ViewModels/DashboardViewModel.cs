@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DismSharp.Core;
@@ -100,7 +101,7 @@ public partial class DashboardViewModel : ObservableObject
             }
             DiskDrives = diskDisplayList;
         }
-        catch { }
+        catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
 
         // 后台并行：WMI（CPU）+ WMI（可用内存）+ DISM
         LoadingStatus = "正在查询硬件信息...";
@@ -110,10 +111,11 @@ public partial class DashboardViewModel : ObservableObject
             try
             {
                 using var searcher = new System.Management.ManagementObjectSearcher("SELECT Name FROM Win32_Processor");
-                foreach (var obj in searcher.Get())
+                using var results = searcher.Get();
+                foreach (var obj in results)
                     return obj["Name"]?.ToString()?.Trim() ?? "未知";
             }
-            catch { }
+            catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
             return "未知";
         });
 
@@ -123,10 +125,11 @@ public partial class DashboardViewModel : ObservableObject
             {
                 using var searcher = new System.Management.ManagementObjectSearcher(
                     "SELECT FreePhysicalMemory FROM Win32_OperatingSystem");
-                foreach (var obj in searcher.Get())
+                using var results = searcher.Get();
+                foreach (var obj in results)
                     return FileHelper.FormatSize((long)(Convert.ToUInt64(obj["FreePhysicalMemory"]) * 1024));
             }
-            catch { }
+            catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
             return "N/A";
         });
 
@@ -142,7 +145,8 @@ public partial class DashboardViewModel : ObservableObject
                     Ok: true
                 );
             }
-            catch { return (Features: 0, Drivers: 0, Packages: 0, Ok: false); }
+            catch (Exception ex) { Debug.WriteLine($"[Dashboard] Error: {ex.Message}"); }
+            return (Features: 0, Drivers: 0, Packages: 0, Ok: false);
         });
 
         // 先等 WMI 结果（快的先到）

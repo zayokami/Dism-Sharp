@@ -1,5 +1,7 @@
 namespace DismSharp.Core.CleanupRules;
 
+using System.Diagnostics;
+
 /// <summary>文件清理规则基类，提供通用的扫描和删除逻辑</summary>
 public abstract class FileCleanupRule : ICleanupRule
 {
@@ -35,10 +37,7 @@ public abstract class FileCleanupRule : ICleanupRule
                         cleaned++;
                     }
                 }
-                catch
-                {
-                    // 单个文件删除失败不影响整体
-                }
+                catch (Exception ex) { Debug.WriteLine($"[FileCleanupRule] Delete Error: {ex.Message}"); }
 
                 progress?.Report((cleaned, total));
             }
@@ -71,16 +70,10 @@ public abstract class FileCleanupRule : ICleanupRule
                     var info = new FileInfo(file);
                     entries.Add(new CleanupEntry(file, info.Length));
                 }
-                catch
-                {
-                    // 无法访问的文件跳过
-                }
+                catch (Exception ex) { Debug.WriteLine($"[FileCleanupRule] FileInfo Error: {ex.Message}"); }
             }
         }
-        catch
-        {
-            // 目录无法访问
-        }
+        catch (Exception ex) { Debug.WriteLine($"[FileCleanupRule] Directory Error: {ex.Message}"); }
 
         return entries;
     }

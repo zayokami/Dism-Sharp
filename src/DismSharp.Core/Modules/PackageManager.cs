@@ -39,6 +39,6 @@ public static class PackageManager
                 IntPtr.Zero);
 
             DismSharpException.ThrowIfFailed(hr);
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DismSharp.Core.Helpers;
 
 namespace DismSharp.Core.CleanupRules;
@@ -26,17 +27,17 @@ public class WindowsUpdateCacheRule : FileCleanupRule
         CancellationToken cancellationToken = default)
     {
         // 清理前需停止 Windows Update 服务
-        bool wasRunning = await Task.Run(() => ServiceHelper.StopService("wuauserv"), cancellationToken);
+        bool wasRunning = await Task.Run(() => ServiceHelper.StopService("wuauserv"), cancellationToken).ConfigureAwait(false);
 
         try
         {
-            return await base.CleanAsync(entries, progress, cancellationToken);
+            return await base.CleanAsync(entries, progress, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             // 清理完毕后恢复服务
             if (wasRunning)
-                await Task.Run(() => ServiceHelper.StartService("wuauserv"), cancellationToken);
+                await Task.Run(() => ServiceHelper.StartService("wuauserv"), cancellationToken).ConfigureAwait(false);
         }
     }
 }

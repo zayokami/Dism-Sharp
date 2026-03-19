@@ -48,6 +48,7 @@ public sealed class DismSharpSession : IDisposable
     private readonly uint _session;
     private bool _disposed;
     private static bool _initialized;
+    private static readonly object _lock = new();
 
     /// <summary>内部会话句柄，供同程序集内的模块使用</summary>
     internal uint SessionHandle => _session;
@@ -66,21 +67,27 @@ public sealed class DismSharpSession : IDisposable
         string? logFilePath = null,
         string? scratchDirectory = null)
     {
-        if (_initialized) return;
+        lock (_lock)
+        {
+            if (_initialized) return;
 
-        int hr = DismApi.DismInitialize(logLevel, logFilePath, scratchDirectory);
-        DismSharpException.ThrowIfFailed(hr);
-        _initialized = true;
+            int hr = DismApi.DismInitialize(logLevel, logFilePath, scratchDirectory);
+            DismSharpException.ThrowIfFailed(hr);
+            _initialized = true;
+        }
     }
 
     /// <summary>关闭 DISM API 引擎</summary>
     public static void Shutdown()
     {
-        if (!_initialized) return;
+        lock (_lock)
+        {
+            if (!_initialized) return;
 
-        int hr = DismApi.DismShutdown();
-        _initialized = false;
-        DismSharpException.ThrowIfFailed(hr);
+            int hr = DismApi.DismShutdown();
+            _initialized = false;
+            DismSharpException.ThrowIfFailed(hr);
+        }
     }
 
     /// <summary>打开在线系统映像会话</summary>
@@ -127,7 +134,9 @@ public sealed class DismSharpSession : IDisposable
             for (int i = 0; i < count; i++)
             {
                 var feature = Marshal.PtrToStructure<DismFeature>(featuresPtr + i * structSize);
-                string name = Marshal.PtrToStringUni(feature.FeatureName) ?? "";
+                string name = feature.FeatureName != IntPtr.Zero
+                    ? Marshal.PtrToStringUni(feature.FeatureName) ?? ""
+                    : "";
                 result.Add(new FeatureInfo(name, feature.State));
             }
             return result;
@@ -156,12 +165,22 @@ public sealed class DismSharpSession : IDisposable
             {
                 var driver = Marshal.PtrToStructure<DismDriverPackage>(driversPtr + i * structSize);
                 result.Add(new DriverPackageInfo(
-                    Marshal.PtrToStringUni(driver.PublishedName) ?? "",
-                    Marshal.PtrToStringUni(driver.OriginalFileName) ?? "",
+                    driver.PublishedName != IntPtr.Zero
+                        ? Marshal.PtrToStringUni(driver.PublishedName) ?? ""
+                        : "",
+                    driver.OriginalFileName != IntPtr.Zero
+                        ? Marshal.PtrToStringUni(driver.OriginalFileName) ?? ""
+                        : "",
                     driver.IsInBox,
-                    Marshal.PtrToStringUni(driver.ClassName) ?? "",
-                    Marshal.PtrToStringUni(driver.ClassDescription) ?? "",
-                    Marshal.PtrToStringUni(driver.ProviderName) ?? "",
+                    driver.ClassName != IntPtr.Zero
+                        ? Marshal.PtrToStringUni(driver.ClassName) ?? ""
+                        : "",
+                    driver.ClassDescription != IntPtr.Zero
+                        ? Marshal.PtrToStringUni(driver.ClassDescription) ?? ""
+                        : "",
+                    driver.ProviderName != IntPtr.Zero
+                        ? Marshal.PtrToStringUni(driver.ProviderName) ?? ""
+                        : "",
                     driver.DriverSignature,
                     driver.IsBootCritical,
                     driver.Date.ToDateTime(),
@@ -192,7 +211,9 @@ public sealed class DismSharpSession : IDisposable
             {
                 var package = Marshal.PtrToStructure<DismPackage>(packagesPtr + i * structSize);
                 result.Add(new PackageBasicInfo(
-                    Marshal.PtrToStringUni(package.PackageName) ?? "",
+                    package.PackageName != IntPtr.Zero
+                        ? Marshal.PtrToStringUni(package.PackageName) ?? ""
+                        : "",
                     package.PackageState,
                     package.ReleaseType,
                     package.InstallTime.ToDateTime()));
@@ -216,7 +237,10 @@ public sealed class DismSharpSession : IDisposable
 
     private static void EnsureInitialized()
     {
-        if (!_initialized)
-            throw new InvalidOperationException("DISM API 尚未初始化，请先调用 DismSharpSession.Initialize()");
+        lock (_lock)
+        {
+            if (!_initialized)
+                throw new InvalidOperationException("DISM API 尚未初始化，请先调用 DismSharpSession.Initialize()");
+        }
     }
 }

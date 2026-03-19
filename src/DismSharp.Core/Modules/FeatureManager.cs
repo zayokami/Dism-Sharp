@@ -46,7 +46,7 @@ public static class FeatureManager
                 IntPtr.Zero);
 
             DismSharpException.ThrowIfFailed(hr);
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>异步禁用 Windows 功能</summary>
@@ -86,6 +86,6 @@ public static class FeatureManager
                 IntPtr.Zero);
 
             DismSharpException.ThrowIfFailed(hr);
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 }

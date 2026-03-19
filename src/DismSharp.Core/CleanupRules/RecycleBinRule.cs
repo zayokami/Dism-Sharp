@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DismSharp.Core.Native;
 
 namespace DismSharp.Core.CleanupRules;
@@ -28,9 +29,9 @@ public class RecycleBinRule : ICleanupRule
                     entries.Add(new CleanupEntry("$RECYCLE.BIN", info.i64Size));
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // 查询失败
+                Debug.WriteLine($"[RecycleBin] Scan error: {ex.Message}");
             }
 
             return entries;
@@ -57,8 +58,9 @@ public class RecycleBinRule : ICleanupRule
                 // S_OK = 0, S_FALSE when already empty
                 return (hr == 0 || hr == 1) ? 1 : 0;
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[RecycleBin] Clean error: {ex.Message}");
                 return 0;
             }
         }, cancellationToken);
